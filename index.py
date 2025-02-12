@@ -1,96 +1,81 @@
-# import sys
-# import getpass
-# from cryptography.fernet import Fernet # type: ignore
-
-# # print(sys.argv)
-# email = sys.argv[1]
-# message = sys.argv[2]
-
-# while True:
-#     password = getpass.getpass("Create a password: ")
-#     confirm_password = getpass.getpass("Confirm your password: ")
-    
-#     if password == confirm_password:
-#         break
-#     else:
-#         print("Passwords do not match. Try again.")
-
-# print(f"{email}, {password}, {message}")
-
-# # Generate a key
-# key = Fernet.generate_key()
-
-# # Encrypt a message
-# cipher = Fernet(key)
-# encrypted_message = cipher.encrypt(message.encode())
-# print(f"encrypted: {encrypted_message}")
-
-# # Decrypt the message
-# decrypted_message = cipher.decrypt(encrypted_message).decode()
-# print(f"decrypted: {decrypted_message}")
-
-
-
-
-
-# chatgpt completed
-
 import sys
 import getpass
 from cryptography.fernet import Fernet  # type: ignore
+import boto3
 
 # AWS KMS imports (to be added)
-# import boto3
+
 
 # AWS S3 imports (to be added)
 # import boto3
 
 # print(sys.argv)
-email = sys.argv[1]
-message = sys.argv[2]
 
-while True:
-    password = getpass.getpass("Create a password: ")
-    confirm_password = getpass.getpass("Confirm your password: ")
-    
-    if password == confirm_password:
-        break
-    else:
-        print("Passwords do not match. Try again.")
+def get():
+    email = sys.argv[2]
 
-# Print password in green
+    while True:
+        password = getpass.getpass("Create a password: ")
+        confirm_password = getpass.getpass("Confirm your password: ")
+        
+        if password == confirm_password:
+            break
+        else:
+            print("Passwords do not match. Try again.")
 
-print(f"{email}, {message}")
+    # Print password in green
 
-# Replace Fernet key generation with AWS KMS
-# key = Fernet.generate_key()  # This will be replaced by a KMS key
+    print(f"{email}")
 
-# Use AWS KMS to encrypt the message
-# kms_client = boto3.client('kms')
-# key_id = 'alias/your-kms-key'  # Replace with your actual KMS key alias or key ID
+def put():
 
-# Encrypt the message using AWS KMS
-# response = kms_client.encrypt(
-#     KeyId=key_id,
-#     Plaintext=message.encode()
-# )
-# encrypted_message = response['CiphertextBlob']
+    email = sys.argv[2]
+    message = sys.argv[3]
 
-# Temporary Fernet encryption for now
-key = Fernet.generate_key()
-cipher = Fernet(key)
-encrypted_message = cipher.encrypt(message.encode())
-print(f"encrypted: {encrypted_message}")
+    while True:
+        password = getpass.getpass("Create a password: ")
+        confirm_password = getpass.getpass("Confirm your password: ")
+        
+        if password == confirm_password:
+            break
+        else:
+            print("Passwords do not match. Try again.")
 
-# Decrypt the message using AWS KMS
-# response = kms_client.decrypt(
-#     CiphertextBlob=encrypted_message
-# )
-# decrypted_message = response['Plaintext'].decode()
+    # Print password in green
 
-# Temporary Fernet decryption for now
-decrypted_message = cipher.decrypt(encrypted_message).decode()
-print(f"decrypted: {decrypted_message}")
+    print(f"{email}, {message}")
+
+    # Replace Fernet key generation with AWS KMS
+    # key = Fernet.generate_key()  # This will be replaced by a KMS key
+
+    # Use AWS KMS to encrypt the message
+    # kms_client = boto3.client('kms')
+    # key_id = 'alias/your-kms-key'  # Replace with your actual KMS key alias or key ID
+
+    # Encrypt the message using AWS KMS
+    # response = kms_client.encrypt(
+    #     KeyId=key_id,
+    #     Plaintext=message.encode()
+    # )
+    # encrypted_message = response['CiphertextBlob']
+
+    # Temporary Fernet encryption for now
+    key = Fernet.generate_key()
+    cipher = Fernet(key)
+    encrypted_message = cipher.encrypt(message.encode())
+    print(f"encrypted: {encrypted_message}")
+
+    # Decrypt the message using AWS KMS
+    # response = kms_client.decrypt(
+    #     CiphertextBlob=encrypted_message
+    # )
+    # decrypted_message = response['Plaintext'].decode()
+
+    # Temporary Fernet decryption for now
+    decrypted_message = cipher.decrypt(encrypted_message).decode()
+    print(f"decrypted: {decrypted_message}")
+
+
 
 # Send the encrypted string to an S3 bucket
 # s3_client = boto3.client('s3')
@@ -102,3 +87,12 @@ print(f"decrypted: {decrypted_message}")
 
 # Print confirmation
 # print(f"Encrypted data successfully uploaded to S3 bucket: {bucket_name}/{object_key}")
+
+command = sys.argv[1]
+
+if command == "get":
+    get()
+elif command == "put":
+    put()
+else:
+    print('wrong command. run again with get or put.')
