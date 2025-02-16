@@ -2,6 +2,8 @@ import sys
 import getpass
 from cryptography.fernet import Fernet  # type: ignore
 import boto3
+from dotenv import load_dotenv
+import os
 
 # AWS KMS imports (to be added)
 
@@ -11,11 +13,18 @@ import boto3
 
 # print(sys.argv)
 
+s3 = boto3.client("s3")
+load_dotenv()
+# bucket name worx
+BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
+kms_key_id = os.getenv("KMS_KEY_ID")
+kms_client = boto3.client('kms', region_name='us-east-2')
+
 def get():
     email = sys.argv[2]
 
     while True:
-        password = getpass.getpass("Create a password: ")
+        password = getpass.getpass("Password: ")
         confirm_password = getpass.getpass("Confirm your password: ")
         
         if password == confirm_password:
@@ -23,17 +32,42 @@ def get():
         else:
             print("Passwords do not match. Try again.")
 
-    # Print password in green
-
     print(f"{email}")
+
+    response = s3.get_object(Bucket=BUCKET_NAME, Key="message")
+    data = response['Body'].read()
+
+    decrypted = kms_client.decrypt(CiphertextBlob=data)
+
+    res = decrypted['Plaintext'].decode()
+
+    print('*** --------- ***')
+    print(res)
+    print('*** --------- ***')
+
+    # we could get the code to delete the item from the bucket here, but that's not the feature. 
+
+    # keeping it alive is a different thing, they could retrieve the same info as many times as needed within the 5 mins.
+
+    # do we get all and then check which one to retrieve or to retrieve all?
+
+    # first, but first we work on getting and decrypting the val in the browser.
 
 def put():
 
     email = sys.argv[2]
+    # type = sys.argv[3]
     message = sys.argv[3]
 
+    # if type == "-m":
+        # message
+    # else:
+        # file. check file type
+
+
+
     while True:
-        password = getpass.getpass("Create a password: ")
+        password = getpass.getpass("Password: ")
         confirm_password = getpass.getpass("Confirm your password: ")
         
         if password == confirm_password:
@@ -41,52 +75,17 @@ def put():
         else:
             print("Passwords do not match. Try again.")
 
-    # Print password in green
-
     print(f"{email}, {message}")
+    
+    response = kms_client.encrypt(
+        KeyId=kms_key_id,
+        Plaintext=message
+    )
 
-    # Replace Fernet key generation with AWS KMS
-    # key = Fernet.generate_key()  # This will be replaced by a KMS key
+    encrypted = response['CiphertextBlob']
 
-    # Use AWS KMS to encrypt the message
-    # kms_client = boto3.client('kms')
-    # key_id = 'alias/your-kms-key'  # Replace with your actual KMS key alias or key ID
-
-    # Encrypt the message using AWS KMS
-    # response = kms_client.encrypt(
-    #     KeyId=key_id,
-    #     Plaintext=message.encode()
-    # )
-    # encrypted_message = response['CiphertextBlob']
-
-    # Temporary Fernet encryption for now
-    key = Fernet.generate_key()
-    cipher = Fernet(key)
-    encrypted_message = cipher.encrypt(message.encode())
-    print(f"encrypted: {encrypted_message}")
-
-    # Decrypt the message using AWS KMS
-    # response = kms_client.decrypt(
-    #     CiphertextBlob=encrypted_message
-    # )
-    # decrypted_message = response['Plaintext'].decode()
-
-    # Temporary Fernet decryption for now
-    decrypted_message = cipher.decrypt(encrypted_message).decode()
-    print(f"decrypted: {decrypted_message}")
-
-
-
-# Send the encrypted string to an S3 bucket
-# s3_client = boto3.client('s3')
-# bucket_name = 'your-s3-bucket-name'  # Replace with your actual S3 bucket name
-# object_key = 'encrypted_data.txt'  # Define the object key (file name) in S3
-
-# Upload the encrypted message to S3
-# s3_client.put_object(Bucket=bucket_name, Key=object_key, Body=encrypted_message)
-
-# Print confirmation
-# print(f"Encrypted data successfully uploaded to S3 bucket: {bucket_name}/{object_key}")
+    s3.put_object(Bucket=BUCKET_NAME, Key="message", Body=encrypted)
+    print('done!')
 
 command = sys.argv[1]
 
